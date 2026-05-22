@@ -53,6 +53,29 @@ async fn handle_connection(mut client_stream: TcpStream, target: String) -> Resu
     let mut target_stream = TcpStream::connect(&target).await?;
     info!("Conectado con éxito al servidor destino: {}", target);
 
+    let mut buffer = [0u8; 1024]; 
+    
+    let bytes_read = client_stream.peek(&mut buffer).await?; 
+
+    if bytes_read > 0 {
+        if buffer[0] == 0x16 {
+            let tls_version_major = buffer[1];
+            let tls_version_minor = buffer[2];
+            info!(
+                "¡Alerta TLS Detectada! El cliente inició Handshake TLS. Versión de registro: {}.{}", 
+                tls_version_major, tls_version_minor
+            );
+            
+            let mut hex_string = String::new();
+            for byte in &buffer[0..16] {
+                hex_string.push_str(&format!("{:02X} ", byte));
+            }
+            info!("Primeros 16 bytes de la huella del cliente: [ {}]", hex_string);
+        } else {
+            info!("Tráfico entrante detectado, pero no parece TLS estándar (Primer byte: {:02X})", buffer[0]);
+        }
+    }
+
     let (mut client_reader, mut client_writer) = client_stream.split();
     let (mut target_reader, mut target_writer) = target_stream.split();
 
