@@ -53,26 +53,49 @@ async fn handle_connection(mut client_stream: TcpStream, target: String) -> Resu
     let mut target_stream = TcpStream::connect(&target).await?;
     info!("Conectado con éxito al servidor destino: {}", target);
 
-    let mut buffer = [0u8; 1024]; 
-    
+    let mut buffer = [0u8; 2048]; 
     let bytes_read = client_stream.peek(&mut buffer).await?; 
 
-    if bytes_read > 0 {
-        if buffer[0] == 0x16 {
-            let tls_version_major = buffer[1];
-            let tls_version_minor = buffer[2];
-            info!(
-                "¡Alerta TLS Detectada! El cliente inició Handshake TLS. Versión de registro: {}.{}", 
-                tls_version_major, tls_version_minor
-            );
+    if bytes_read > 5 && buffer[0] == 0x16 && buffer[5] == 0x01 {
+        let mut pointer = 43; 
+
+        if pointer < bytes_read {
+            let session_id_len = buffer[pointer] as usize;
+            pointer += 1 + session_id_len;
+        }
+
+        if pointer + 2 <= bytes_read {
+            let cipher_suites_len = ((buffer[pointer] as usize) << 8) | (buffer[pointer + 1] as usize);
+            pointer += 2 + cipher_suites_len;
+        }
+
+        if pointer + 1 <= bytes_read {
+            let comp_methods_len = buffer[pointer] as usize;
+            pointer += 1 + comp_methods_len;
+        }
+
+        if pointer + 2 <= bytes_read {
+            let extensions_len = ((buffer[pointer] as usize) << 8) | (buffer[pointer + 1] as usize);
+            pointer += 2;
             
-            let mut hex_string = String::new();
-            for byte in &buffer[0..16] {
-                hex_string.push_str(&format!("{:02X} ", byte));
+            info!("¡Éxito! Extensiones TLS encontradas en el byte índice: {}", pointer);
+            info!("Longitud total del bloque de extensiones: {} bytes", extensions_len);
+
+            if pointer + extensions_len <= bytes_read {
+                let mut ext_pointer = pointer;
+                let end_of_extensions = pointer + extensions_len;
+                let mut ext_count = 0;
+
+                while ext_pointer + 4 <= end_of_extensions {
+                    let ext_type = ((buffer[ext_pointer] as u16) << 8) | (buffer[ext_pointer + 1] as u16);
+                    let ext_len = ((buffer[ext_pointer + 2] as usize) << 8) | (buffer[ext_pointer + 3] as usize);
+                    
+                    info!("-> Extensión #{}: ID [0x{:04X}] - Tamaño: {} bytes", ext_count, ext_type, ext_len);
+                    
+                    ext_count += 1;
+                    ext_pointer += 4 + ext_len;
+                }
             }
-            info!("Primeros 16 bytes de la huella del cliente: [ {}]", hex_string);
-        } else {
-            info!("Tráfico entrante detectado, pero no parece TLS estándar (Primer byte: {:02X})", buffer[0]);
         }
     }
 
