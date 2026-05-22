@@ -4,7 +4,8 @@ use tracing::{info, error, Level};
 use tracing_subscriber::FmtSubscriber;
 use std::error::Error;
 
-@Parser(version = "1.0", about = "Proxy inverso que altera huellas TLS")
+#[derive(Parser, Debug)]
+#[command(version = "1.0", about = "Proxy inverso que altera huellas TLS")]
 struct Args {
     #[arg(short, long, default_value = "127.0.0.1:8080")]
     listen: String,
@@ -13,7 +14,7 @@ struct Args {
     target: String,
 }
 
-@tokio::main
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::INFO)
@@ -40,7 +41,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         
         let target_address = args.target.clone();
 
-
         tokio::spawn(async move {
             if let Err(e) = handle_connection(client_stream, target_address).await {
                 error!("Error manejando la conexión de {}: {}", client_addr, e);
@@ -50,7 +50,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 async fn handle_connection(mut client_stream: TcpStream, target: String) -> Result<(), Box<dyn Error + Send + Sync>> {
-    // Conectarse al servidor de destino real
     let mut target_stream = TcpStream::connect(&target).await?;
     info!("Conectado con éxito al servidor destino: {}", target);
 
