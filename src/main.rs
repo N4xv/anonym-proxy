@@ -41,6 +41,8 @@ fn pseudorandom_shuffle(extensions: &mut Vec<TlsExtension>) {
     }
 }
 
+// esta parte se podria mejorar a nivel de optimizacion
+// Uso de tokio junto al main para que funcione sin ningun tipo de problema
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let subscriber = FmtSubscriber::builder()
