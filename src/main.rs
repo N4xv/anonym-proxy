@@ -15,7 +15,7 @@ struct Args {
     #[arg(short, long)]
     target: String,
 }
-
+// -- correccion y posible mejora
 // cada extension TLS tiene tipo + datos, nada del otro mundo
 struct TlsExtension {
     ext_type: [u8; 2],
