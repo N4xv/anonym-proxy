@@ -204,7 +204,7 @@ async fn handle_connection(
     // select! para cerrar ambos lados cuando uno termine
     let (mut cr, mut cw) = client_stream.split();
     let (mut tr, mut tw) = target_stream.split();
-
+// se puede mejorar
     tokio::select! {
         res = tokio::io::copy(&mut cr, &mut tw) => { res?; },
         res = tokio::io::copy(&mut tr, &mut cw) => { res?; },
