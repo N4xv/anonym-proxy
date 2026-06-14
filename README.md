@@ -1,4 +1,4 @@
-# AnonymProxy (TLS Fingerprint Mutator)...
+# AnonymProxy (TLS Fingerprint Mutator) (vs1)
 
 Un proxy inverso asíncrono de bajo nivel desarrollado en **Rust** enfocado en la evasión de sistemas anti-bots y firewalls corporativos mediante la **mutación dinámica de huellas criptográficas TLS (JA3/JA4)** en tiempo real.
 
