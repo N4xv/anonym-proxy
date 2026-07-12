@@ -36,7 +36,6 @@ fn pseudorandom_shuffle(extensions: &mut Vec<TlsExtension>) {
     let n = extensions.len();
     if n < 2 { return; }
 
-    // fisher-yates shuffle, lo de toda la vida
     for i in (1..n).rev() {
         seed ^= seed << 13;
         seed ^= seed >> 7;
